@@ -1,0 +1,189 @@
+-- Key System
+local CORRECT_KEY = "lol_gax"
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
+
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+ScreenGui.ResetOnSpawn = false
+
+local KeyFrame = Instance.new("Frame", ScreenGui)
+KeyFrame.Size = UDim2.new(0, 300, 0, 150)
+KeyFrame.Position = UDim2.new(0.5, -150, 0.5, -75)
+KeyFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+KeyFrame.Active = true
+KeyFrame.Draggable = true
+Instance.new("UICorner", KeyFrame).CornerRadius = UDim.new(0, 12)
+
+local Title = Instance.new("TextLabel", KeyFrame)
+Title.Text = "Get the key on Discord"
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.TextScaled = true
+Title.Font = Enum.Font.GothamBold
+Title.TextColor3 = Color3.new(1, 1, 1)
+Title.BackgroundTransparency = 1
+
+local TextBox = Instance.new("TextBox", KeyFrame)
+TextBox.Position = UDim2.new(0.1, 0, 0.4, 0)
+TextBox.Size = UDim2.new(0.8, 0, 0.25, 0)
+TextBox.PlaceholderText = "Enter Key"
+TextBox.Text = ""
+TextBox.Font = Enum.Font.Gotham
+TextBox.TextColor3 = Color3.new(1, 1, 1)
+TextBox.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+Instance.new("UICorner", TextBox)
+
+local Submit = Instance.new("TextButton", KeyFrame)
+Submit.Position = UDim2.new(0.1, 0, 0.7, 0)
+Submit.Size = UDim2.new(0.8, 0, 0.2, 0)
+Submit.Text = "Submit"
+Submit.Font = Enum.Font.Gotham
+Submit.TextColor3 = Color3.new(1, 1, 1)
+Submit.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+Instance.new("UICorner", Submit)
+
+Submit.MouseButton1Click:Connect(function()
+	if TextBox.Text == CORRECT_KEY then
+		KeyFrame:Destroy()
+
+		-- Menu Principal
+		local RunService = game:GetService("RunService")
+		local camera = workspace.CurrentCamera
+		local players = game:GetService("Players")
+		local localPlayer = players.LocalPlayer
+		local aimbotActive = false
+		local wallCheck = false
+		local teamCheck = false
+		local deadCheck = false
+		local touchCount = 0
+		local lastTouch = 0
+		local clickCount = 0
+		local lastClick = 0
+
+		local function getClosestEnemy()
+			local closest, dist = nil, math.huge
+			for _, player in pairs(players:GetPlayers()) do
+				if player ~= localPlayer and player.Character and player.Character:FindFirstChild("Head") then
+					if teamCheck and player.Team == localPlayer.Team then continue end
+					if deadCheck and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health <= 0 then continue end
+					if wallCheck then
+						local origin = camera.CFrame.Position
+						local _, hit = workspace:FindPartOnRay(Ray.new(origin, (player.Character.Head.Position - origin).Unit * 999), localPlayer.Character, false, true)
+						if hit and hit:IsDescendantOf(player.Character) == false then continue end
+					end
+					local screenPoint, onScreen = camera:WorldToScreenPoint(player.Character.Head.Position)
+					local distance = (camera.CFrame.Position - player.Character.Head.Position).Magnitude
+					if onScreen and distance < dist then
+						closest, dist = player, distance
+					end
+				end
+			end
+			return closest
+		end
+
+		local function aimAt(target)
+			if target and target.Character and target.Character:FindFirstChild("Head") then
+				camera.CFrame = CFrame.new(camera.CFrame.Position, target.Character.Head.Position)
+			end
+		end
+
+		RunService.RenderStepped:Connect(function()
+			if aimbotActive then
+				local target = getClosestEnemy()
+				if target then aimAt(target) end
+			end
+		end)
+
+		local gui = Instance.new("ScreenGui", game.CoreGui)
+		gui.ResetOnSpawn = false
+
+		local frame = Instance.new("Frame", gui)
+		frame.Size = UDim2.new(0, 200, 0, 260)
+		frame.Position = UDim2.new(0, 100, 0, 100)
+		frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+		frame.Active = true
+		frame.Draggable = true
+		Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
+
+		local function createButton(text, order, callback)
+			local button = Instance.new("TextButton", frame)
+			button.Size = UDim2.new(1, -20, 0, 30)
+			button.Position = UDim2.new(0, 10, 0, 10 + (order * 35))
+			button.Text = text
+			button.Font = Enum.Font.Gotham
+			button.TextColor3 = Color3.new(1, 1, 1)
+			button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+			Instance.new("UICorner", button)
+			button.MouseButton1Click:Connect(callback)
+			return button
+		end
+
+		createButton("Aimbot", 0, function() aimbotActive = not aimbotActive end)
+		createButton("Wall Check", 1, function() wallCheck = not wallCheck end)
+		createButton("Team Check", 2, function() teamCheck = not teamCheck end)
+		createButton("Dead Check", 3, function() deadCheck = not deadCheck end)
+
+		local credits = Instance.new("TextLabel", frame)
+		credits.Position = UDim2.new(0, 10, 0, 170)
+		credits.Size = UDim2.new(1, -20, 0, 60)
+		credits.Text = "Direitor: @coroadinho_37203\nProgramador: @coroadinho_37203 and @Shadownchavoso"
+		credits.Font = Enum.Font.Gotham
+		credits.TextScaled = false
+		credits.TextColor3 = Color3.new(1, 1, 1)
+		credits.TextWrapped = true
+		credits.BackgroundTransparency = 1
+
+		local onAgainButton = Instance.new("TextButton", gui)
+		onAgainButton.Size = UDim2.new(0, 160, 0, 40)
+		onAgainButton.Position = UDim2.new(0.5, -80, 0.8, 0)
+		onAgainButton.Text = "On Aimbot Again"
+		onAgainButton.Visible = false
+		onAgainButton.Font = Enum.Font.GothamBold
+		onAgainButton.TextColor3 = Color3.new(1, 1, 1)
+		onAgainButton.BackgroundColor3 = Color3.fromRGB(70, 130, 180)
+		Instance.new("UICorner", onAgainButton)
+
+		onAgainButton.MouseButton1Click:Connect(function()
+			aimbotActive = true
+			onAgainButton.Visible = false
+		end)
+
+		UserInputService.InputBegan:Connect(function(input, gpe)
+			if gpe then return end
+			if input.UserInputType == Enum.UserInputType.Touch then
+				if tick() - lastTouch < 4 then
+					touchCount += 1
+				else
+					touchCount = 1
+				end
+				lastTouch = tick()
+				if touchCount >= 4 and aimbotActive then
+					aimbotActive = false
+					task.delay(2, function()
+						if not aimbotActive then
+							onAgainButton.Visible = true
+						end
+					end)
+				end
+			elseif input.UserInputType == Enum.UserInputType.MouseButton1 then
+				if tick() - lastClick < 0.5 then
+					clickCount += 1
+				else
+					clickCount = 1
+				end
+				lastClick = tick()
+				if clickCount >= 2 and aimbotActive then
+					aimbotActive = false
+					task.delay(2, function()
+						if not aimbotActive then
+							onAgainButton.Visible = true
+						end
+					end)
+				end
+			elseif input.KeyCode == Enum.KeyCode.K then
+				aimbotActive = true
+				onAgainButton.Visible = false
+			end
+		end)
+	end
+end)
